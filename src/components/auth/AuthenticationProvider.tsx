@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
+import { RegistrationForm } from './RegistrationForm';
 import {
   signIn,
   signOut,
@@ -41,6 +42,7 @@ export const AuthenticationProvider: React.FC<AuthenticationProviderProps> = ({ 
   const [showForgot, setShowForgot] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetSent, setResetSent] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
 
   useEffect(() => {
     getCurrentUser()
@@ -128,7 +130,16 @@ export const AuthenticationProvider: React.FC<AuthenticationProviderProps> = ({ 
 
   if (loading) return <div>Loading...</div>;
 
+
   if (!user) {
+    if (showRegister) {
+      return (
+        <div>
+          <RegistrationForm />
+          <button onClick={() => setShowRegister(false)}>Back to Login</button>
+        </div>
+      );
+    }
     if (showForgot || resetSent) {
       return (
         <div>
@@ -182,6 +193,7 @@ export const AuthenticationProvider: React.FC<AuthenticationProviderProps> = ({ 
           <button type="submit">Log In</button>
         </form>
         <button onClick={() => setShowForgot(true)}>Forgot Password</button>
+        <button onClick={() => setShowRegister(true)}>Create Account</button>
         <button onClick={() => socialLogin('Google')}>Google</button>
         <button onClick={() => socialLogin('Facebook')}>Facebook</button>
         <button onClick={() => socialLogin('Apple')}>Apple</button>

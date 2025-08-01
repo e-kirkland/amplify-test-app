@@ -1,47 +1,24 @@
-import { useEffect, useState } from "react";
-import type { Schema } from "../amplify/data/resource";
-import { generateClient } from "aws-amplify/data";
+
+
 import { AuthenticationProvider } from "./components/auth/AuthenticationProvider";
+import { RegistrationForm } from "./components/auth/RegistrationForm";
 
-const client = generateClient<Schema>();
-
-function TodosApp() {
-  const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
-
-  useEffect(() => {
-    client.models.Todo.observeQuery().subscribe({
-      next: (data) => setTodos([...data.items]),
-    });
-  }, []);
-
-  function createTodo() {
-    client.models.Todo.create({ content: window.prompt("Todo content") });
-  }
-
+function EnneagramApp() {
   return (
     <main>
-      <h1>My todos</h1>
-      <button onClick={createTodo}>+ new</button>
-      <ul>
-        {todos.map((todo) => (
-          <li key={todo.id}>{todo.content}</li>
-        ))}
-      </ul>
-      <div>
-        🥳 App successfully hosted. Try creating a new todo.
-        <br />
-        <a href="https://docs.amplify.aws/react/start/quickstart/#make-frontend-updates">
-          Review next step of this tutorial.
-        </a>
-      </div>
+      <h1>Enneagram Discovery App</h1>
+      <p>Welcome! Please sign in or register to begin your Enneagram journey.</p>
+      <RegistrationForm />
+      {/* Survey and results components will be added here. */}
     </main>
   );
 }
 
+
 function App() {
   return (
     <AuthenticationProvider>
-      <TodosApp />
+      <EnneagramApp />
     </AuthenticationProvider>
   );
 }
