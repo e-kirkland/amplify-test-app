@@ -1,30 +1,34 @@
+import { AuthenticationProvider } from '../../../components/auth/AuthenticationProvider';
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { AuthenticationProvider } from '../../../components/auth/AuthenticationProvider';
-import * as AuthModule from 'aws-amplify';
+
+import * as AuthApi from '@aws-amplify/auth';
 
 jest.mock('aws-amplify', () => ({
-  Auth: {
-    signIn: jest.fn(),
-    federatedSignIn: jest.fn(),
-    currentAuthenticatedUser: jest.fn(),
-    signOut: jest.fn(),
-    forgotPassword: jest.fn(),
-    forgotPasswordSubmit: jest.fn(),
-  },
+  Amplify: { configure: jest.fn() },
+}));
+
+jest.mock('@aws-amplify/auth', () => ({
+  signIn: jest.fn(),
+  signOut: jest.fn(),
+  getCurrentUser: jest.fn(),
+  resetPassword: jest.fn(),
+  confirmResetPassword: jest.fn(),
+  signInWithRedirect: jest.fn(),
 }));
 
 const mockUser = { username: 'testuser', attributes: { email: 'test@example.com' } };
 
 describe('AuthenticationProvider', () => {
+  const { signIn, signOut, getCurrentUser, resetPassword, confirmResetPassword, signInWithRedirect } = AuthApi as any;
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it('renders children when authenticated', async () => {
-    (AuthModule.Auth.currentAuthenticatedUser as jest.Mock).mockResolvedValue(mockUser);
+    (getCurrentUser as jest.Mock).mockResolvedValue(mockUser);
     render(
       <AuthenticationProvider>
         <div>Protected Content</div>
@@ -34,7 +38,7 @@ describe('AuthenticationProvider', () => {
   });
 
   it('shows login form when not authenticated', async () => {
-    (AuthModule.Auth.currentAuthenticatedUser as jest.Mock).mockRejectedValue(new Error('Not signed in'));
+    (getCurrentUser as jest.Mock).mockRejectedValue(new Error('Not signed in'));
     render(
       <AuthenticationProvider>
         <div>Protected Content</div>
@@ -46,8 +50,8 @@ describe('AuthenticationProvider', () => {
   });
 
   it('handles login with email and password', async () => {
-    (AuthModule.Auth.currentAuthenticatedUser as jest.Mock).mockRejectedValue(new Error('Not signed in'));
-    (AuthModule.Auth.signIn as jest.Mock).mockResolvedValue(mockUser);
+    (getCurrentUser as jest.Mock).mockRejectedValue(new Error('Not signed in'));
+    (signIn as jest.Mock).mockResolvedValue(mockUser);
     render(
       <AuthenticationProvider>
         <div>Protected Content</div>
@@ -57,11 +61,11 @@ describe('AuthenticationProvider', () => {
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
     fireEvent.click(screen.getByRole('button', { name: /log in/i }));
     expect(await screen.findByText('Protected Content')).toBeInTheDocument();
-    expect(AuthModule.Auth.signIn).toHaveBeenCalledWith('test@example.com', 'password123');
+    expect(signIn).toHaveBeenCalledWith({ username: 'test@example.com', password: 'password123' });
   });
 
   it('handles social login (Google, Facebook, Apple)', async () => {
-    (AuthModule.Auth.currentAuthenticatedUser as jest.Mock).mockRejectedValue(new Error('Not signed in'));
+    (getCurrentUser as jest.Mock).mockRejectedValue(new Error('Not signed in'));
     render(
       <AuthenticationProvider>
         <div>Protected Content</div>
@@ -70,13 +74,13 @@ describe('AuthenticationProvider', () => {
     const providers = ['Google', 'Facebook', 'Apple'];
     for (const provider of providers) {
       fireEvent.click(await screen.findByRole('button', { name: new RegExp(provider, 'i') }));
-      expect(AuthModule.Auth.federatedSignIn).toHaveBeenCalledWith({ provider });
+      expect(signInWithRedirect).toHaveBeenCalledWith({ provider });
     }
   });
 
   it('shows error message on failed login', async () => {
-    (AuthModule.Auth.currentAuthenticatedUser as jest.Mock).mockRejectedValue(new Error('Not signed in'));
-    (AuthModule.Auth.signIn as jest.Mock).mockRejectedValue(new Error('Invalid credentials'));
+    (getCurrentUser as jest.Mock).mockRejectedValue(new Error('Not signed in'));
+    (signIn as jest.Mock).mockRejectedValue(new Error('Invalid credentials'));
     render(
       <AuthenticationProvider>
         <div>Protected Content</div>
@@ -90,7 +94,7 @@ describe('AuthenticationProvider', () => {
   });
 
   it('persists session across reloads', async () => {
-    (AuthModule.Auth.currentAuthenticatedUser as jest.Mock).mockResolvedValue(mockUser);
+    (getCurrentUser as jest.Mock).mockResolvedValue(mockUser);
     render(
       <AuthenticationProvider>
         <div>Protected Content</div>
@@ -104,12 +108,12 @@ describe('AuthenticationProvider', () => {
       </AuthenticationProvider>
     );
     expect(await screen.findByText('Protected Content')).toBeInTheDocument();
-    expect(AuthModule.Auth.currentAuthenticatedUser).toHaveBeenCalled();
+    expect(getCurrentUser).toHaveBeenCalled();
   });
 
   it('handles logout', async () => {
-    (AuthModule.Auth.currentAuthenticatedUser as jest.Mock).mockResolvedValue(mockUser);
-    (AuthModule.Auth.signOut as jest.Mock).mockResolvedValue(undefined);
+    (getCurrentUser as jest.Mock).mockResolvedValue(mockUser);
+    (signOut as jest.Mock).mockResolvedValue(undefined);
     render(
       <AuthenticationProvider>
         <div>Protected Content</div>
@@ -117,14 +121,14 @@ describe('AuthenticationProvider', () => {
     );
     expect(await screen.findByText('Protected Content')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /log out/i }));
-    await waitFor(() => expect(AuthModule.Auth.signOut).toHaveBeenCalled());
+    await waitFor(() => expect(signOut).toHaveBeenCalled());
     expect(await screen.findByLabelText(/email/i)).toBeInTheDocument();
   });
 
   it('handles password recovery flow', async () => {
-    (AuthModule.Auth.currentAuthenticatedUser as jest.Mock).mockRejectedValue(new Error('Not signed in'));
-    (AuthModule.Auth.forgotPassword as jest.Mock).mockResolvedValue(undefined);
-    (AuthModule.Auth.forgotPasswordSubmit as jest.Mock).mockResolvedValue(undefined);
+    (getCurrentUser as jest.Mock).mockRejectedValue(new Error('Not signed in'));
+    (resetPassword as jest.Mock).mockResolvedValue(undefined);
+    (confirmResetPassword as jest.Mock).mockResolvedValue(undefined);
     render(
       <AuthenticationProvider>
         <div>Protected Content</div>
@@ -133,12 +137,12 @@ describe('AuthenticationProvider', () => {
     fireEvent.click(await screen.findByRole('button', { name: /forgot password/i }));
     fireEvent.change(await screen.findByLabelText(/email/i), { target: { value: 'reset@example.com' } });
     fireEvent.click(screen.getByRole('button', { name: /send reset code/i }));
-    expect(AuthModule.Auth.forgotPassword).toHaveBeenCalledWith('reset@example.com');
+    expect(resetPassword).toHaveBeenCalledWith({ username: 'reset@example.com' });
 
     fireEvent.change(await screen.findByLabelText(/verification code/i), { target: { value: '123456' } });
     fireEvent.change(screen.getByLabelText(/new password/i), { target: { value: 'newpass123' } });
     fireEvent.click(screen.getByRole('button', { name: /reset password/i }));
-    expect(AuthModule.Auth.forgotPasswordSubmit).toHaveBeenCalledWith('reset@example.com', '123456', 'newpass123');
+    expect(confirmResetPassword).toHaveBeenCalledWith({ username: 'reset@example.com', confirmationCode: '123456', newPassword: 'newpass123' });
     // After reset, login form should be shown again
     expect(await screen.findByLabelText(/email/i)).toBeInTheDocument();
   });

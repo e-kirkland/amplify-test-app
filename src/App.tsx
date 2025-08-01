@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
+import { AuthenticationProvider } from "./components/auth/AuthenticationProvider";
 
 const client = generateClient<Schema>();
 
-function App() {
+function TodosApp() {
   const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
 
   useEffect(() => {
@@ -34,6 +35,14 @@ function App() {
         </a>
       </div>
     </main>
+  );
+}
+
+function App() {
+  return (
+    <AuthenticationProvider>
+      <TodosApp />
+    </AuthenticationProvider>
   );
 }
 
