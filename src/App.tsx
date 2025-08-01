@@ -1,26 +1,29 @@
 
 
+
+
 import { AuthenticationProvider } from "./components/auth/AuthenticationProvider";
-import { RegistrationForm } from "./components/auth/RegistrationForm";
+import { LandingHero } from "./components/layout/LandingHero";
+
+
 
 function EnneagramApp() {
   return (
-    <main>
-      <h1>Enneagram Discovery App</h1>
-      <p>Welcome! Please sign in or register to begin your Enneagram journey.</p>
-      <RegistrationForm />
-      {/* Survey and results components will be added here. */}
+    <main className="app-main">
+      <LandingHero />
+      <AuthenticationProvider>
+        {/* Survey and results components will be added here. */}
+        {/* The AuthenticationProvider renders login/registration UI itself. */}
+        <></>
+      </AuthenticationProvider>
     </main>
   );
 }
 
 
+
 function App() {
-  return (
-    <AuthenticationProvider>
-      <EnneagramApp />
-    </AuthenticationProvider>
-  );
+  return <EnneagramApp />;
 }
 
 export default App;

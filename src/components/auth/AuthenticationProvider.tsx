@@ -128,21 +128,25 @@ export const AuthenticationProvider: React.FC<AuthenticationProviderProps> = ({ 
     resetPassword: resetPasswordHandler,
   };
 
-  if (loading) return <div>Loading...</div>;
+
+  if (loading) return <div className="auth-card">Loading...</div>;
+
 
 
   if (!user) {
     if (showRegister) {
       return (
-        <div>
+        <div className="registration-card">
           <RegistrationForm />
-          <button onClick={() => setShowRegister(false)}>Back to Login</button>
+          <button className="auth-link-btn" onClick={() => setShowRegister(false)}>
+            &larr; Back to Login
+          </button>
         </div>
       );
     }
     if (showForgot || resetSent) {
       return (
-        <div>
+        <div className="forgot-card">
           {resetSent ? (
             <form
               onSubmit={e => {
@@ -153,10 +157,15 @@ export const AuthenticationProvider: React.FC<AuthenticationProviderProps> = ({ 
               }}
             >
               <label htmlFor="code">Verification Code</label>
-              <input id="code" name="code" />
+              <input id="code" name="code" autoFocus />
               <label htmlFor="newPassword">New Password</label>
               <input id="newPassword" name="newPassword" type="password" />
-              <button type="submit">Reset Password</button>
+              <div className="auth-actions">
+                <button type="submit">Reset Password</button>
+                <button type="button" className="auth-link-btn" onClick={() => { setShowForgot(false); setResetSent(false); }}>
+                  &larr; Back to Login
+                </button>
+              </div>
             </form>
           ) : (
             <form
@@ -167,17 +176,21 @@ export const AuthenticationProvider: React.FC<AuthenticationProviderProps> = ({ 
               }}
             >
               <label htmlFor="email">Email</label>
-              <input id="email" name="email" type="email" />
-              <button type="submit">Send Reset Code</button>
+              <input id="email" name="email" type="email" autoFocus />
+              <div className="auth-actions">
+                <button type="submit">Send Reset Code</button>
+                <button type="button" className="auth-link-btn" onClick={() => { setShowForgot(false); setResetSent(false); }}>
+                  &larr; Back to Login
+                </button>
+              </div>
             </form>
           )}
-          <button onClick={() => { setShowForgot(false); setResetSent(false); }}>Back to Login</button>
-          {error && <div>{error}</div>}
+          {error && <div className="auth-error">{error}</div>}
         </div>
       );
     }
     return (
-      <div>
+      <div className="auth-card">
         <form
           onSubmit={e => {
             e.preventDefault();
@@ -187,17 +200,26 @@ export const AuthenticationProvider: React.FC<AuthenticationProviderProps> = ({ 
           }}
         >
           <label htmlFor="email">Email</label>
-          <input id="email" name="email" type="email" />
+          <input id="email" name="email" type="email" autoFocus />
           <label htmlFor="password">Password</label>
           <input id="password" name="password" type="password" />
-          <button type="submit">Log In</button>
+          <div className="auth-actions">
+            <button type="submit">Log In</button>
+            <button type="button" className="auth-link-btn" onClick={() => setShowForgot(true)}>
+              Forgot Password?
+            </button>
+            <button type="button" className="auth-link-btn" onClick={() => setShowRegister(true)}>
+              Create Account
+            </button>
+          </div>
         </form>
-        <button onClick={() => setShowForgot(true)}>Forgot Password</button>
-        <button onClick={() => setShowRegister(true)}>Create Account</button>
-        <button onClick={() => socialLogin('Google')}>Google</button>
-        <button onClick={() => socialLogin('Facebook')}>Facebook</button>
-        <button onClick={() => socialLogin('Apple')}>Apple</button>
-        {error && <div>{error}</div>}
+        <div className="auth-divider">or</div>
+        <div className="auth-actions">
+          <button type="button" onClick={() => socialLogin('Google')}>Continue with Google</button>
+          <button type="button" onClick={() => socialLogin('Facebook')}>Continue with Facebook</button>
+          <button type="button" onClick={() => socialLogin('Apple')}>Continue with Apple</button>
+        </div>
+        {error && <div className="auth-error">{error}</div>}
       </div>
     );
   }

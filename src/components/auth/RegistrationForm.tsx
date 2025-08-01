@@ -75,12 +75,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = () => {
   };
 
   if (step === 'success') {
-    return <div>Account verified! You can now sign in.</div>;
+    return <div className="auth-success">Account verified! You can now sign in.</div>;
   }
 
   if (step === 'verify') {
     return (
-      <form onSubmit={handleVerify}>
+      <form onSubmit={handleVerify} className="registration-form">
         <label htmlFor="code">Enter the verification code</label>
         <input
           id="code"
@@ -89,15 +89,18 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = () => {
           value={form.code}
           onChange={handleChange}
           aria-label="Verification code"
+          autoFocus
         />
-        <button type="submit" disabled={loading}>Verify</button>
-        {apiError && <div>{apiError}</div>}
+        <div className="auth-actions">
+          <button type="submit" disabled={loading}>Verify</button>
+        </div>
+        {apiError && <div className="registration-error">{apiError}</div>}
       </form>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="registration-form">
       <label htmlFor="email">Email</label>
       <input
         id="email"
@@ -106,8 +109,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = () => {
         value={form.email}
         onChange={handleChange}
         aria-label="Email"
+        autoFocus
       />
-      {errors.email && <div>{errors.email}</div>}
+      {errors.email && <div className="registration-error">{errors.email}</div>}
       <label htmlFor="password">Password</label>
       <input
         id="password"
@@ -117,7 +121,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = () => {
         onChange={handleChange}
         aria-label="Password"
       />
-      {errors.password && <div>{errors.password}</div>}
+      {errors.password && <div className="registration-error">{errors.password}</div>}
       <label htmlFor="confirmPassword">Confirm Password</label>
       <input
         id="confirmPassword"
@@ -127,9 +131,11 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = () => {
         onChange={handleChange}
         aria-label="Confirm password"
       />
-      {errors.confirmPassword && <div>{errors.confirmPassword}</div>}
-      <button type="submit" disabled={loading}>Sign Up</button>
-      {apiError && <div>{apiError}</div>}
+      {errors.confirmPassword && <div className="registration-error">{errors.confirmPassword}</div>}
+      <div className="auth-actions">
+        <button type="submit" disabled={loading}>Sign Up</button>
+      </div>
+      {apiError && <div className="registration-error">{apiError}</div>}
     </form>
   );
 };
